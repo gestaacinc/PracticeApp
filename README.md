@@ -49,6 +49,12 @@ CREATE TABLE orders (
     order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (product_id) REFERENCES products(id)
 );
+
+-- Insert sample products
+INSERT INTO products (name, price, stock) VALUES
+('Product A', 100.00, 50),
+('Product B', 150.00, 30),
+('Product C', 200.00, 20);
 ```
 
 ---
