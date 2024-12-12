@@ -1,5 +1,3 @@
-PracticeApp
-
 # Step-by-Step Guide to Building a Frontend Store with Modal Checkout
 
 ## Prerequisites
@@ -21,10 +19,12 @@ Ensure you have the following installed and set up:
 ## Step 1: Create the SQL Schema
 
 ### 1. Start MySQL in XAMPP
+
 - Open XAMPP Control Panel.
 - Start `Apache` and `MySQL`.
 
 ### 2. Create a Database
+
 - Open phpMyAdmin: [http://localhost/phpmyadmin](http://localhost/phpmyadmin).
 - Create a new database named `store`.
 
@@ -38,6 +38,7 @@ CREATE TABLE products (
     name VARCHAR(255) NOT NULL,
     price DECIMAL(10, 2) NOT NULL,
     stock INT NOT NULL,
+    photo VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -51,10 +52,10 @@ CREATE TABLE orders (
 );
 
 -- Insert sample products
-INSERT INTO products (name, price, stock) VALUES
-('Product A', 100.00, 50),
-('Product B', 150.00, 30),
-('Product C', 200.00, 20);
+INSERT INTO products (name, price, stock, photo) VALUES
+('Product A', 100.00, 50, 'product_a.jpg'),
+('Product B', 150.00, 30, 'product_b.jpg'),
+('Product C', 200.00, 20, 'product_c.jpg');
 ```
 
 ---
@@ -67,12 +68,14 @@ Create the following directory structure:
 store/
 ├── index.php        # Homepage listing products
 ├── order_process.php # Backend to process orders
+├── display_orders.php # Page to display orders
 ├── db.php           # Database connection
 ├── assets/
 │   ├── css/
 │   │   └── style.css
-│   └── js/
-│       └── script.js
+│   ├── js/
+│   │   └── script.js
+│   └── images/      # Folder for product photos
 └── templates/
     └── modal.php    # Reusable modal form
 ```
@@ -127,6 +130,7 @@ $result = $conn->query($sql);
     <div class="product-list">
         <?php while ($row = $result->fetch_assoc()): ?>
             <div class="product">
+                <img src="assets/images/<?php echo $row['photo']; ?>" alt="<?php echo $row['name']; ?>" style="width:100%;">
                 <h2><?php echo $row['name']; ?></h2>
                 <p>Price: PHP <?php echo $row['price']; ?></p>
                 <p>Stock: <?php echo $row['stock']; ?></p>
@@ -185,6 +189,11 @@ body {
     width: 200px;
 }
 
+.product img {
+    max-width: 100%;
+    height: auto;
+}
+
 .modal {
     display: none;
     position: fixed;
@@ -225,7 +234,7 @@ function closeModal() {
 
 ---
 
-## Step 7: Order Processing (order_process.php)
+## Step 7: Order Processing (order\_process.php)
 
 Handle the order submission:
 
@@ -259,12 +268,67 @@ $conn->close();
 
 ---
 
-## Step 8: Test the Application
+## Step 8: Display Orders (display\_orders.php)
+
+Create a new file to display the list of orders:
+
+```php
+<?php
+include 'db.php';
+
+// Fetch orders from the database
+$sql = "SELECT orders.id, products.name AS product_name, orders.quantity, orders.total_price, orders.order_date 
+        FROM orders 
+        JOIN products ON orders.product_id = products.id";
+$result = $conn->query($sql);
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order List</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <h1>Order List</h1>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Product Name</th>
+                <th>Quantity</th>
+                <th>Total Price</th>
+                <th>Order Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php while ($row = $result->fetch_assoc()): ?>
+                <tr>
+                    <td><?php echo $row['id']; ?></td>
+                    <td><?php echo $row['product_name']; ?></td>
+                    <td><?php echo $row['quantity']; ?></td>
+                    <td>PHP <?php echo $row['total_price']; ?></td>
+                    <td><?php echo $row['order_date']; ?></td>
+                </tr>
+            <?php endwhile; ?>
+        </tbody>
+    </table>
+</body>
+</html>
+```
+
+---
+
+## Step 9: Test the Application
 
 1. Start XAMPP and ensure `Apache` and `MySQL` are running.
 2. Place the `store` folder inside `htdocs` (e.g., `C:\xampp\htdocs\store`).
-3. Access the application in your browser: [http://localhost/store/index.php](http://localhost/store/index.php).
-4. Add sample products to the `products` table in phpMyAdmin and test the checkout process.
+3. Access the application in your browser:
+   - Product listing: [http://localhost/store/index.php](http://localhost/store/index.php)
+   - Order list: [http://localhost/store/display\_orders.php](http://localhost/store/display_orders.php)
+4. Test placing orders and view them in the order list.
 
 ---
 
